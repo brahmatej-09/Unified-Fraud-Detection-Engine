@@ -5,7 +5,7 @@ const authenticateToken = require("../middleware/authMiddleware");
 const router = express.Router();
 
 router.get(
-    "/analyze/:transactionId",
+    "/analyze/:tableName/:transactionId",
     authenticateToken,
     analyzeTransaction
 );

@@ -4,7 +4,7 @@ const express = require("express");
 const cors = require("cors");
 
 const pool = require("./config/db");
-
+const ocrRoutes = require("./routes/ocrRoutes");
 const authRoutes = require("./routes/authRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
 const fraudRoutes = require("./routes/fraudRoutes");
@@ -35,7 +35,7 @@ app.use("/api/fraud", fraudRoutes);
 
 // Analysis history
 app.use("/api", historyRoutes);
-
+app.use("/api/ocr", ocrRoutes);
 // ==========================================
 // BASIC SERVER TEST
 // ==========================================

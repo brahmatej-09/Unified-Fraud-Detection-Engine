@@ -4,7 +4,7 @@ const pool = require("../config/db");
 
 const analyzeTransaction = async (req, res) => {
     try {
-        const { transactionId } = req.params;
+        const { tableName, transactionId } = req.params;
 
         if (!transactionId) {
             return res.status(400).json({
@@ -12,40 +12,85 @@ const analyzeTransaction = async (req, res) => {
             });
         }
 
+        // =====================================================
         // 1. Ask Python fraud engine for analysis
-        const result =
-            await fraudEngineService.analyzeTransaction(transactionId);
+        // =====================================================
 
+        const result =
+            await fraudEngineService.analyzeTransaction(
+                tableName,
+                transactionId
+            );
+
+        // =====================================================
         // 2. Stop if transaction is invalid
+        // =====================================================
+
         if (!result.valid) {
             return res.status(400).json(result);
         }
 
+        // =====================================================
         // 3. Generate AI explanation
+        // =====================================================
+
         const aiExplanation =
             await geminiService.generateExplanation(result);
 
+        // =====================================================
         // 4. Find transaction in PostgreSQL
-        console.log("Looking for transaction:", transactionId);
+        //    If it does not exist, create it
+        // =====================================================
+
+        console.log(
+            "Looking for transaction:",
+            transactionId
+        );
 
         const transaction = await pool.query(
             `SELECT id, transaction_id
-            FROM transactions
-            WHERE transaction_id = $1`,
+             FROM transactions
+             WHERE transaction_id = $1`,
             [transactionId]
         );
 
-        console.log("Database query result:", transaction.rows);
+        let transactionDbId;
 
         if (transaction.rows.length === 0) {
-            return res.status(404).json({
-                message: "Transaction not found in database"
-            });
+
+            console.log(
+                "Transaction not found. Creating:",
+                transactionId
+            );
+
+            const newTransaction = await pool.query(
+                `INSERT INTO transactions
+                (
+                    transaction_id
+                )
+                VALUES ($1)
+                RETURNING id, transaction_id`,
+                [transactionId]
+            );
+
+            transactionDbId =
+                newTransaction.rows[0].id;
+
+        } else {
+
+            transactionDbId =
+                transaction.rows[0].id;
         }
 
-        const transactionDbId = transaction.rows[0].id;
+        console.log(
+            "Transaction database ID:",
+            transactionDbId
+        );
 
+        // =====================================================
         // 5. Save fraud analysis
+        // =====================================================
+
         const analysis = await pool.query(
             `INSERT INTO fraud_analysis
             (
@@ -70,7 +115,10 @@ const analyzeTransaction = async (req, res) => {
             ]
         );
 
+        // =====================================================
         // 6. Save audit log
+        // =====================================================
+
         await pool.query(
             `INSERT INTO audit_logs
             (
@@ -88,7 +136,10 @@ const analyzeTransaction = async (req, res) => {
             ]
         );
 
+        // =====================================================
         // 7. Return result
+        // =====================================================
+
         res.json({
             message: "Fraud analysis completed",
             analysis: analysis.rows[0],
@@ -97,7 +148,11 @@ const analyzeTransaction = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Fraud analysis error:", error);
+
+        console.error(
+            "Fraud analysis error:",
+            error
+        );
 
         res.status(500).json({
             message: "Fraud analysis failed"
