@@ -331,6 +331,58 @@ function App() {
   };
 
   // =========================================================
+  // OCR FILE SELECTION
+  // =========================================================
+
+  const handleOCRFileChange = (event) => {
+
+    const file =
+      event.target.files?.[0] || null;
+
+    setError("");
+    setMessage("");
+    setOcrResult(null);
+
+    if (!file) {
+      setOcrFile(null);
+      return;
+    }
+
+    // Check the actual file extension
+    const allowedExtensions = [
+      ".pdf",
+      ".png",
+      ".jpg",
+      ".jpeg"
+    ];
+
+    const fileName =
+      file.name.toLowerCase();
+
+    const isValidFile =
+      allowedExtensions.some(
+        (extension) =>
+          fileName.endsWith(extension)
+      );
+
+    if (!isValidFile) {
+
+      setOcrFile(null);
+
+      setError(
+        "Only pdf, png, jpg and jpeg files are supported."
+      );
+
+      // Clear the file input
+      event.target.value = "";
+
+      return;
+    }
+
+    setOcrFile(file);
+  };
+
+  // =========================================================
   // OCR ANALYSIS
   // =========================================================
 
@@ -740,9 +792,7 @@ function App() {
       }}
     >
 
-      {/* =====================================================
-          HEADER
-      ===================================================== */}
+      {/* HEADER */}
 
       <div
         style={{
@@ -792,9 +842,7 @@ function App() {
 
       </div>
 
-      {/* =====================================================
-          ERROR
-      ===================================================== */}
+      {/* ERROR */}
 
       {error && (
         <div
@@ -820,9 +868,7 @@ function App() {
         </div>
       )}
 
-      {/* =====================================================
-          SUCCESS
-      ===================================================== */}
+      {/* SUCCESS */}
 
       {message && (
         <div
@@ -838,9 +884,7 @@ function App() {
         </div>
       )}
 
-      {/* =====================================================
-          ANALYZE TRANSACTION
-      ===================================================== */}
+      {/* ANALYZE TRANSACTION */}
 
       <div
         style={{
@@ -857,11 +901,7 @@ function App() {
           Analyze Transaction
         </h2>
 
-        <p
-          style={{
-            color: "#666"
-          }}
-        >
+        <p style={{ color: "#666" }}>
           Select a dataset table and enter a
           transaction ID.
         </p>
@@ -897,29 +937,12 @@ function App() {
             }}
           >
 
-            <option value="table1">
-              Table 1
-            </option>
-
-            <option value="table2">
-              Table 2
-            </option>
-
-            <option value="table3">
-              Table 3
-            </option>
-
-            <option value="table4">
-              Table 4
-            </option>
-
-            <option value="table5">
-              Table 5
-            </option>
-
-            <option value="table6">
-              Table 6
-            </option>
+            <option value="table1">Table 1</option>
+            <option value="table2">Table 2</option>
+            <option value="table3">Table 3</option>
+            <option value="table4">Table 4</option>
+            <option value="table5">Table 5</option>
+            <option value="table6">Table 6</option>
 
           </select>
 
@@ -959,9 +982,7 @@ function App() {
 
       </div>
 
-      {/* =====================================================
-          STATEMENT OCR
-      ===================================================== */}
+      {/* STATEMENT OCR */}
 
       <div
         style={{
@@ -978,11 +999,7 @@ function App() {
           Statement OCR Analysis
         </h2>
 
-        <p
-          style={{
-            color: "#666"
-          }}
-        >
+        <p style={{ color: "#666" }}>
           Upload a PDF or image statement. The system
           will extract Fund Flow information using OCR
           and include it in the fraud analysis.
@@ -1000,16 +1017,7 @@ function App() {
           <input
             type="file"
             accept=".pdf,.png,.jpg,.jpeg"
-            onChange={(e) => {
-
-              setOcrFile(
-                e.target.files?.[0] || null
-              );
-
-              setOcrResult(null);
-              setError("");
-
-            }}
+            onChange={handleOCRFileChange}
           />
 
           <button
@@ -1045,9 +1053,7 @@ function App() {
 
       </div>
 
-      {/* =====================================================
-          OCR RESULT
-      ===================================================== */}
+      {/* OCR RESULT */}
 
       {ocrResult && (
         <div
@@ -1073,19 +1079,11 @@ function App() {
 
             <div>
 
-              <h2
-                style={{
-                  margin: 0
-                }}
-              >
+              <h2 style={{ margin: 0 }}>
                 OCR Analysis Result
               </h2>
 
-              <p
-                style={{
-                  color: "#666"
-                }}
-              >
+              <p style={{ color: "#666" }}>
                 Transaction:{" "}
                 <strong>
                   {ocrResult.transaction_id}
@@ -1110,8 +1108,6 @@ function App() {
 
           </div>
 
-          {/* OCR SUMMARY */}
-
           <div
             style={{
               display: "grid",
@@ -1130,12 +1126,7 @@ function App() {
               }}
             >
 
-              <p
-                style={{
-                  margin: 0,
-                  color: "#777"
-                }}
-              >
+              <p style={{ margin: 0, color: "#777" }}>
                 Dataset
               </p>
 
@@ -1153,18 +1144,14 @@ function App() {
               }}
             >
 
-              <p
-                style={{
-                  margin: 0,
-                  color: "#777"
-                }}
-              >
+              <p style={{ margin: 0, color: "#777" }}>
                 Final Risk Score
               </p>
 
               <h2>
                 {ocrResult.final_result?.final_score ??
                   "N/A"}
+
                 <span
                   style={{
                     fontSize: "14px",
@@ -1186,12 +1173,7 @@ function App() {
               }}
             >
 
-              <p
-                style={{
-                  margin: 0,
-                  color: "#777"
-                }}
-              >
+              <p style={{ margin: 0, color: "#777" }}>
                 Fund Flow Score
               </p>
 
@@ -1205,13 +1187,7 @@ function App() {
 
           </div>
 
-          {/* OCR FUND FLOW VALUES */}
-
-          <h3
-            style={{
-              marginTop: "30px"
-            }}
-          >
+          <h3 style={{ marginTop: "30px" }}>
             Extracted Fund Flow
           </h3>
 
@@ -1269,13 +1245,7 @@ function App() {
 
           </div>
 
-          {/* OCR SCORE */}
-
-          <h3
-            style={{
-              marginTop: "30px"
-            }}
-          >
+          <h3 style={{ marginTop: "30px" }}>
             Fund Flow Components
           </h3>
 
@@ -1288,13 +1258,7 @@ function App() {
             weight="35%"
           />
 
-          {/* OCR EXPLANATION */}
-
-          <h3
-            style={{
-              marginTop: "30px"
-            }}
-          >
+          <h3 style={{ marginTop: "30px" }}>
             Explanation
           </h3>
 
@@ -1313,9 +1277,7 @@ function App() {
         </div>
       )}
 
-      {/* =====================================================
-          NORMAL ANALYSIS RESULT
-      ===================================================== */}
+      {/* NORMAL ANALYSIS RESULT */}
 
       {result && (
         <div
@@ -1342,11 +1304,7 @@ function App() {
 
             <div>
 
-              <h2
-                style={{
-                  margin: 0
-                }}
-              >
+              <h2 style={{ margin: 0 }}>
                 Analysis Result
               </h2>
 
@@ -1383,8 +1341,6 @@ function App() {
 
           </div>
 
-          {/* SUMMARY CARDS */}
-
           <div
             style={{
               display: "grid",
@@ -1412,11 +1368,7 @@ function App() {
                 Transaction
               </p>
 
-              <h3
-                style={{
-                  marginBottom: 0
-                }}
-              >
+              <h3 style={{ marginBottom: 0 }}>
                 {result.details?.transaction_id ||
                   transactionId}
               </h3>
@@ -1441,11 +1393,7 @@ function App() {
                 Final Risk Score
               </p>
 
-              <h2
-                style={{
-                  marginBottom: 0
-                }}
-              >
+              <h2 style={{ marginBottom: 0 }}>
                 {result.details?.final_result
                   ?.final_score ??
                   "N/A"}
@@ -1482,11 +1430,7 @@ function App() {
                 Risk Level
               </p>
 
-              <h2
-                style={{
-                  marginBottom: 0
-                }}
-              >
+              <h2 style={{ marginBottom: 0 }}>
                 {result.details?.final_result
                   ?.risk_level ??
                   "N/A"}
@@ -1496,21 +1440,11 @@ function App() {
 
           </div>
 
-          {/* COMPONENT SCORES */}
-
-          <h3
-            style={{
-              marginTop: "35px"
-            }}
-          >
+          <h3 style={{ marginTop: "35px" }}>
             Component Scores
           </h3>
 
-          <p
-            style={{
-              color: "#666"
-            }}
-          >
+          <p style={{ color: "#666" }}>
             Each component contributes to the final
             fraud score according to its defined weight.
           </p>
@@ -1542,13 +1476,7 @@ function App() {
             weight="20%"
           />
 
-          {/* TRIGGERED SIGNALS */}
-
-          <h3
-            style={{
-              marginTop: "35px"
-            }}
-          >
+          <h3 style={{ marginTop: "35px" }}>
             Triggered Signals
           </h3>
 
@@ -1589,11 +1517,7 @@ function App() {
 
             ) : (
 
-              <p
-                style={{
-                  margin: 0
-                }}
-              >
+              <p style={{ margin: 0 }}>
                 No major risk signals were triggered.
               </p>
 
@@ -1601,13 +1525,7 @@ function App() {
 
           </div>
 
-          {/* AI EXPLANATION */}
-
-          <h3
-            style={{
-              marginTop: "35px"
-            }}
-          >
+          <h3 style={{ marginTop: "35px" }}>
             AI Explanation
           </h3>
 
@@ -1628,9 +1546,7 @@ function App() {
         </div>
       )}
 
-      {/* =====================================================
-          HISTORY
-      ===================================================== */}
+      {/* HISTORY */}
 
       <div
         style={{

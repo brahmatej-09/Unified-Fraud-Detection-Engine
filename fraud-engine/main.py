@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 
 import shutil
 import os
@@ -80,7 +80,7 @@ async def process_ocr(file: UploadFile = File(...)):
             return {
                 "success": False,
                 "message":
-                    "Only PDF, PNG, JPG and JPEG files are supported"
+                    "Only pdf, png, jpg and jpeg files are supported"
             }
 
         return {
@@ -138,7 +138,7 @@ async def process_fund_flow_ocr(
             return {
                 "success": False,
                 "message":
-                    "Only PDF, PNG, JPG and JPEG files are supported"
+                    "Only pdf, png, jpg and jpeg files are supported"
             }
 
         # ====================================================
@@ -164,12 +164,8 @@ async def process_fund_flow_ocr(
         return {
             "success": True,
             "filename": file.filename,
-
             "fund_flow": fund_flow,
-
-            "fund_flow_analysis":
-                fund_flow_result,
-
+            "fund_flow_analysis": fund_flow_result,
             "ocr_text": text
         }
 
@@ -178,15 +174,20 @@ async def process_fund_flow_ocr(
         if os.path.exists(file_path):
             os.remove(file_path)
 
+
 # ============================================================
 # OCR → COMPLETE FRAUD ANALYSIS
 # ============================================================
 
 @app.post("/ocr/analyze")
 async def analyze_ocr_transaction(
+
     file: UploadFile = File(...),
-    transaction_id: str = "",
-    table_name: str = "table1"
+
+    transaction_id: str = Form(""),
+
+    table_name: str = Form("table1")
+
 ):
 
     os.makedirs("temp", exist_ok=True)
@@ -250,15 +251,19 @@ async def analyze_ocr_transaction(
             return {
                 "valid": False,
                 "message":
-                    "Only PDF, PNG, JPG and JPEG files are supported"
+                    "Only pdf, png, jpg and jpeg files are supported"
             }
 
         # ====================================================
         # 3. Parse Fund Flow from OCR
+        #    IMPORTANT:
+        #    Pass transaction_id so the parser extracts
+        #    the correct record from the statement.
         # ====================================================
 
         ocr_fund_flow = parse_fund_flow_text(
-            text
+            text,
+            transaction_id
         )
 
         # ====================================================
@@ -424,6 +429,8 @@ async def analyze_ocr_transaction(
 
         if os.path.exists(file_path):
             os.remove(file_path)
+
+
 # ============================================================
 # ANALYZE DATA SENT DIRECTLY TO PYTHON
 # ============================================================

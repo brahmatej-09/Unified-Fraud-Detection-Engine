@@ -47,7 +47,8 @@ const analyzeOCR = async (req, res) => {
         const result = await ocrService.analyzeOCR(
             req.file.path,
             transactionId,
-            tableName
+            tableName,
+            req.file.originalname
         );
 
         // -----------------------------------------

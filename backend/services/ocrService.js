@@ -1,21 +1,30 @@
 const axios = require("axios");
+const FormData = require("form-data");
+const fs = require("fs");
+const path = require("path");
 
 const analyzeOCR = async (
     filePath,
     transactionId,
-    tableName
+    tableName,
+    originalFileName
 ) => {
 
     try {
 
-        const FormData = require("form-data");
-        const fs = require("fs");
-
         const form = new FormData();
+
+        // Get the original filename extension
+        const filename =
+            originalFileName ||
+            path.basename(filePath);
 
         form.append(
             "file",
-            fs.createReadStream(filePath)
+            fs.createReadStream(filePath),
+            {
+                filename: filename
+            }
         );
 
         form.append(

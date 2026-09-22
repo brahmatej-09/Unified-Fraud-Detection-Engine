@@ -1,11 +1,7 @@
 import re
 
 
-def parse_fund_flow_text(text):
-    """
-    Convert OCR-extracted statement text into
-    the Fund Flow fields expected by the fraud engine.
-    """
+def parse_fund_flow_text(text, transaction_id=None):
 
     result = {
         "InDegree": None,
@@ -15,60 +11,102 @@ def parse_fund_flow_text(text):
         "HoldingMinutes": None
     }
 
+    # ---------------------------------------------------------
     # Normalize OCR text
+    # ---------------------------------------------------------
+
     text = text.replace(",", "")
     text = text.replace("$", "")
     text = text.replace("€", "")
     text = text.replace("₹", "")
 
-    # -----------------------------
-    # InDegree
-    # -----------------------------
+    # ---------------------------------------------------------
+    # Find the correct transaction record
+    # ---------------------------------------------------------
+
+    if transaction_id:
+
+        transaction_pattern = re.compile(
+            rf"TRANSACTION\s+REF\s*"
+            rf"(?:\n|\r\n|\s)+"
+            rf"{re.escape(transaction_id)}"
+            rf"(.*?)(?=RECORD\s+\d+\s+OF\s+\d+|AMOUNTS\s+IN|$)",
+            re.IGNORECASE | re.DOTALL
+        )
+
+        match = transaction_pattern.search(text)
+
+        if not match:
+            return result
+
+        record_text = match.group(1)
+
+    else:
+
+        record_text = text
+
+    # ---------------------------------------------------------
+    # INCOMING COUNTERPARTIES
+    # ---------------------------------------------------------
 
     match = re.search(
-        r"InDegree\s*[:\-]?\s*(\d+)",
-        text,
+        r"INCOMING\s+COUNTERPARTIES\s*"
+        r"(?:\n|\r\n|\s)+"
+        r"(\d+|N/A)",
+        record_text,
         re.IGNORECASE
     )
 
     if match:
-        result["InDegree"] = int(match.group(1))
+        value = match.group(1)
 
-    # -----------------------------
-    # OutDegree
-    # -----------------------------
+        if value.upper() != "N/A":
+            result["InDegree"] = int(value)
+
+    # ---------------------------------------------------------
+    # OUTGOING COUNTERPARTIES
+    # ---------------------------------------------------------
 
     match = re.search(
-        r"OutDegree\s*[:\-]?\s*(\d+)",
-        text,
+        r"OUTGOING\s+COUNTERPARTIES\s*"
+        r"(?:\n|\r\n|\s)+"
+        r"(\d+|N/A)",
+        record_text,
         re.IGNORECASE
     )
 
     if match:
-        result["OutDegree"] = int(match.group(1))
+        value = match.group(1)
 
-    # -----------------------------
-    # Remaining Balance
-    # -----------------------------
+        if value.upper() != "N/A":
+            result["OutDegree"] = int(value)
+
+    # ---------------------------------------------------------
+    # HOLDING MINUTES
+    # ---------------------------------------------------------
 
     match = re.search(
-        r"RemainingBalance\s*[:\-]?\s*(-?\d+(?:\.\d+)?)",
-        text,
+        r"HOLDING\s+MINUTES\s*"
+        r"(?:\n|\r\n|\s)+"
+        r"(\d+(?:\.\d+)?)",
+        record_text,
         re.IGNORECASE
     )
 
     if match:
-        result["RemainingBalance"] = float(
+        result["HoldingMinutes"] = float(
             match.group(1)
         )
 
-    # -----------------------------
-    # Total Sent
-    # -----------------------------
+    # ---------------------------------------------------------
+    # TOTAL SENT
+    # ---------------------------------------------------------
 
     match = re.search(
-        r"TotalSent\s*[:\-]?\s*(\d+(?:\.\d+)?)",
-        text,
+        r"TOTAL\s+SENT\s*"
+        r"(?:\n|\r\n|\s)+"
+        r"(\d+(?:\.\d+)?)",
+        record_text,
         re.IGNORECASE
     )
 
@@ -77,18 +115,20 @@ def parse_fund_flow_text(text):
             match.group(1)
         )
 
-    # -----------------------------
-    # Holding Minutes
-    # -----------------------------
+    # ---------------------------------------------------------
+    # BALANCE RETAINED
+    # ---------------------------------------------------------
 
     match = re.search(
-        r"HoldingMinutes\s*[:\-]?\s*(\d+(?:\.\d+)?)",
-        text,
+        r"BALANCE\s+RETAINED\s*"
+        r"(?:\n|\r\n|\s)+"
+        r"(-?\d+(?:\.\d+)?)",
+        record_text,
         re.IGNORECASE
     )
 
     if match:
-        result["HoldingMinutes"] = float(
+        result["RemainingBalance"] = float(
             match.group(1)
         )
 
