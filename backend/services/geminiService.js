@@ -23,15 +23,33 @@ Fraud analysis:
 ${JSON.stringify(fraudResult, null, 2)}
 `;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
-        contents: prompt
-    });
+    try {
 
-    return {
-        summary: response.text,
-        generatedBy: "Gemini"
-    };
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-lite",
+            contents: prompt
+        });
+
+        return {
+            summary: response.text,
+            generatedBy: "Gemini"
+        };
+
+    } catch (error) {
+
+        console.error(
+            "Gemini explanation error:",
+            error.message
+        );
+
+        // Gemini failure should NOT stop fraud analysis.
+        return {
+            summary:
+                fraudResult.explanation?.summary ||
+                "Fraud analysis completed. AI explanation is temporarily unavailable.",
+            generatedBy: "Rule-based fallback"
+        };
+    }
 };
 
 module.exports = {

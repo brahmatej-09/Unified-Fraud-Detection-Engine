@@ -1,6 +1,7 @@
 const fraudEngineService = require("../services/fraudEngineService");
-const pool = require("../config/db");
 const geminiService = require("../services/geminiService");
+const pool = require("../config/db");
+
 const analyzeTransaction = async (req, res) => {
     try {
         const { transactionId } = req.params;
@@ -11,23 +12,30 @@ const analyzeTransaction = async (req, res) => {
             });
         }
 
-        // Ask Python fraud engine for analysis
+        // 1. Ask Python fraud engine for analysis
         const result =
             await fraudEngineService.analyzeTransaction(transactionId);
 
-        // Stop if transaction was invalid
+        // 2. Stop if transaction is invalid
         if (!result.valid) {
             return res.status(400).json(result);
         }
+
+        // 3. Generate AI explanation
         const aiExplanation =
             await geminiService.generateExplanation(result);
-        // Find transaction in PostgreSQL
+
+        // 4. Find transaction in PostgreSQL
+        console.log("Looking for transaction:", transactionId);
+
         const transaction = await pool.query(
-            `SELECT id
-             FROM transactions
-             WHERE transaction_id = $1`,
+            `SELECT id, transaction_id
+            FROM transactions
+            WHERE transaction_id = $1`,
             [transactionId]
         );
+
+        console.log("Database query result:", transaction.rows);
 
         if (transaction.rows.length === 0) {
             return res.status(404).json({
@@ -37,7 +45,7 @@ const analyzeTransaction = async (req, res) => {
 
         const transactionDbId = transaction.rows[0].id;
 
-        // Save fraud analysis
+        // 5. Save fraud analysis
         const analysis = await pool.query(
             `INSERT INTO fraud_analysis
             (
@@ -62,6 +70,25 @@ const analyzeTransaction = async (req, res) => {
             ]
         );
 
+        // 6. Save audit log
+        await pool.query(
+            `INSERT INTO audit_logs
+            (
+                user_id,
+                action,
+                transaction_id,
+                details
+            )
+            VALUES ($1, $2, $3, $4)`,
+            [
+                req.user.userId,
+                "FRAUD_ANALYSIS",
+                transactionDbId,
+                `Fraud analysis completed. Risk level: ${result.final_result.risk_level}`
+            ]
+        );
+
+        // 7. Return result
         res.json({
             message: "Fraud analysis completed",
             analysis: analysis.rows[0],

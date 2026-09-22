@@ -1,0 +1,163 @@
+[
+  {
+    "recordId": "AF-01",
+    "transactionId": "TXN-2026-01",
+    "liveTransaction": {
+      "amount": 2549.1,
+      "currency": "CAD",
+      "deviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      },
+      "distanceKm": 1264.06
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 1300.0,
+      "knownDeviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-02",
+    "transactionId": "TXN-2026-02",
+    "liveTransaction": {
+      "amount": 2970.65,
+      "currency": "CAD",
+      "deviceFingerprint": {
+        "os": "Linux",
+        "browser": "Chromium 122.0",
+        "ipAddress": "192.0.2.88",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) Chromium/122.0"
+      },
+      "distanceKm": 504.26
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 1900.0,
+      "knownDeviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-03",
+    "transactionId": "TXN-2026-03",
+    "liveTransaction": {
+      "amount": 5184.05,
+      "currency": "CAD",
+      "deviceFingerprint": {
+        "os": "Linux",
+        "browser": "Chromium 122.0",
+        "ipAddress": "192.0.2.88",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) Chromium/122.0"
+      },
+      "distanceKm": 1990.79
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 2900.0,
+      "knownDeviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-04",
+    "transactionId": "TXN-2026-04",
+    "liveTransaction": {
+      "amount": 1442.74,
+      "currency": "CAD",
+      "deviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      },
+      "distanceKm": 59.2
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 1300.0,
+      "knownDeviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-05",
+    "transactionId": "TXN-2026-05",
+    "liveTransaction": {
+      "amount": 3380.0,
+      "currency": "CAD"
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 1300.0,
+      "knownDeviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-06",
+    "transactionId": "TXN-2026-06",
+    "liveTransaction": {
+      "amount": 5806.14,
+      "currency": "CAD",
+      "deviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      },
+      "distanceKm": 1990.79
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 6998.47,
+      "knownDeviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-07",
+    "transactionId": "TXN-2026-07",
+    "liveTransaction": {
+      "amount": 2553.21,
+      "currency": "CAD",
+      "deviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      },
+      "distanceKm": 729.77
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 1300.0,
+      "knownDeviceFingerprint": {
+        "os": "macOS 13.6",
+        "browser": "Chrome 123.0",
+        "ipAddress": "203.0.113.219",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 13_6) Chrome/123.0"
+      }
+    }
+  }
+]

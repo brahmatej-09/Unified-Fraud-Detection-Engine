@@ -31,30 +31,40 @@ def get_transaction(table_path, transaction_id):
 
     data = load_table(table_path)
 
-    # Find Adaptive Friction record
+    # -----------------------------
+    # ADAPTIVE FRICTION
+    # -----------------------------
+
     adaptive = next(
         (
-            item for item in data["adaptive_friction"]
+            item
+            for item in data["adaptive_friction"]
             if item.get("transactionId") == transaction_id
         ),
         None
     )
 
-    # Find Fund Flow record
+    # -----------------------------
+    # FUND FLOW
+    # -----------------------------
+
     fund_flow_rows = data["fund_flow"][
-        data["fund_flow"]["transactionId"] == transaction_id
+        data["fund_flow"]["TransactionId"] == transaction_id
     ]
 
-    fund_flow = (
-        fund_flow_rows.iloc[0].to_dict()
-        if not fund_flow_rows.empty
-        else None
-    )
+    if not fund_flow_rows.empty:
+        fund_flow = fund_flow_rows.iloc[0].to_dict()
+    else:
+        fund_flow = None
 
-    # Find Phishing record
+    # -----------------------------
+    # PHISHING
+    # -----------------------------
+
     phishing = next(
         (
-            item for item in data["phishing"]
+            item
+            for item in data["phishing"]
             if item.get("transactionId") == transaction_id
         ),
         None

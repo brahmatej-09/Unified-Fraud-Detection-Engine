@@ -1,0 +1,163 @@
+[
+  {
+    "recordId": "AF-01",
+    "transactionId": "TXN-2026-01",
+    "liveTransaction": {
+      "amount": 5475.42,
+      "currency": "BRL",
+      "deviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      },
+      "distanceKm": 83.65
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 4200.0,
+      "knownDeviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-02",
+    "transactionId": "TXN-2026-02",
+    "liveTransaction": {
+      "amount": 10920.0,
+      "currency": "BRL"
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 4200.0,
+      "knownDeviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-03",
+    "transactionId": "TXN-2026-03",
+    "liveTransaction": {
+      "amount": 17167.02,
+      "currency": "BRL",
+      "deviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      },
+      "distanceKm": 1562.86
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 20692.4,
+      "knownDeviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-04",
+    "transactionId": "TXN-2026-04",
+    "liveTransaction": {
+      "amount": 8210.29,
+      "currency": "BRL",
+      "deviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      },
+      "distanceKm": 1562.86
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 6300.0,
+      "knownDeviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-05",
+    "transactionId": "TXN-2026-05",
+    "liveTransaction": {
+      "amount": 11919.15,
+      "currency": "BRL",
+      "deviceFingerprint": {
+        "os": "Android 12",
+        "browser": "Opera 110.0",
+        "ipAddress": "192.0.2.47",
+        "userAgent": "Mozilla/5.0 (Linux; Android 12) OPR/110.0"
+      },
+      "distanceKm": 1454.83
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 6300.0,
+      "knownDeviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-06",
+    "transactionId": "TXN-2026-06",
+    "liveTransaction": {
+      "amount": 6365.89,
+      "currency": "BRL",
+      "deviceFingerprint": {
+        "os": "Android 12",
+        "browser": "Opera 110.0",
+        "ipAddress": "192.0.2.47",
+        "userAgent": "Mozilla/5.0 (Linux; Android 12) OPR/110.0"
+      },
+      "distanceKm": 339.05
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 6300.0,
+      "knownDeviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      }
+    }
+  },
+  {
+    "recordId": "AF-07",
+    "transactionId": "TXN-2026-07",
+    "liveTransaction": {
+      "amount": 15327.7,
+      "currency": "BRL",
+      "deviceFingerprint": {
+        "os": "Android 12",
+        "browser": "Opera 110.0",
+        "ipAddress": "192.0.2.47",
+        "userAgent": "Mozilla/5.0 (Linux; Android 12) OPR/110.0"
+      },
+      "distanceKm": 360.75
+    },
+    "storedProfile": {
+      "historicalAvgAmount": 9800.0,
+      "knownDeviceFingerprint": {
+        "os": "Windows 11",
+        "browser": "Chrome 125.0",
+        "ipAddress": "203.0.113.188",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0"
+      }
+    }
+  }
+]

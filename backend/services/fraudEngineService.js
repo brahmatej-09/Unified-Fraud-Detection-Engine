@@ -14,6 +14,10 @@ const analyzeTransaction = async (transactionId) => {
             error.response?.data || error.message
         );
 
+        if (error.response?.data) {
+            return error.response.data;
+        }
+
         throw new Error("Fraud engine is unavailable");
     }
 };
