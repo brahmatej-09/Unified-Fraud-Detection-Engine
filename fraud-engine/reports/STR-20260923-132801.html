@@ -1,0 +1,320 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Suspicious Transaction Report - STR-20260923-132801
+    </title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            color: #222;
+            line-height: 1.5;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 6px;
+            margin-top: 35px;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 9px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            font-weight: bold;
+        }
+
+        .risk {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .score {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        ul {
+            margin-top: 8px;
+        }
+
+        .explanation {
+            padding: 12px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+        }
+
+        .signature {
+            height: 60px;
+        }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media print {
+            body {
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Suspicious Transaction Report</h1>
+
+    <div class="subtitle">
+        Unified Fraud Detection Engine
+    </div>
+
+
+    <h2>1. Report Header</h2>
+
+    <table>
+        <tr>
+            <th>Reporting Institution</th>
+            <td>Unified Fraud Detection Engine</td>
+        </tr>
+
+        <tr>
+            <th>Report ID</th>
+            <td>STR-20260923-132801</td>
+        </tr>
+
+        <tr>
+            <th>Date of Report</th>
+            <td>2026-09-23 13:28:01 UTC</td>
+        </tr>
+
+        <tr>
+            <th>Prepared By</th>
+            <td>Fraud Detection Engine</td>
+        </tr>
+
+        <tr>
+            <th>Contact</th>
+            <td></td>
+        </tr>
+    </table>
+
+
+    <h2>2. Transaction Summary</h2>
+
+    <table>
+        <tr>
+            <th>Transaction ID</th>
+            <td>TXN-2026-04</td>
+        </tr>
+
+        <tr>
+            <th>Date / Time</th>
+            <td>Not provided</td>
+        </tr>
+
+        <tr>
+            <th>Channel</th>
+            <td>Not provided</td>
+        </tr>
+
+        <tr>
+            <th>Amount</th>
+            <td>28604.84</td>
+        </tr>
+
+        <tr>
+            <th>Currency</th>
+            <td>EUR</td>
+        </tr>
+
+        <tr>
+            <th>Geolocation</th>
+            <td>Not provided</td>
+        </tr>
+
+        <tr>
+            <th>Device Fingerprint</th>
+            <td>{<br>  &quot;os&quot;: &quot;Android 13&quot;,<br>  &quot;browser&quot;: &quot;Chrome 120.0&quot;,<br>  &quot;ipAddress&quot;: &quot;198.51.100.22&quot;,<br>  &quot;userAgent&quot;: &quot;Mozilla/5.0 (Linux; Android 13) Chrome/120.0&quot;<br>}</td>
+        </tr>
+
+        <tr>
+            <th>Merchant</th>
+            <td>Not provided</td>
+        </tr>
+
+        <tr>
+            <th>Merchant Category</th>
+            <td>Not provided</td>
+        </tr>
+
+        <tr>
+            <th>Beneficiary</th>
+            <td>Not provided</td>
+        </tr>
+    </table>
+
+
+    <h2>3. Risk Assessment</h2>
+
+    <table>
+        <tr>
+            <th>Component</th>
+            <th>Sub-score</th>
+            <th>Weight</th>
+        </tr>
+
+        <tr>
+            <td>Adaptive Friction</td>
+            <td>
+                56.07
+            </td>
+            <td>45%</td>
+        </tr>
+
+        <tr>
+            <td>Fund Flow</td>
+            <td>
+                73.03
+            </td>
+            <td>35%</td>
+        </tr>
+
+        <tr>
+            <td>Phishing</td>
+            <td>
+                96.89
+            </td>
+            <td>20%</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <th>Consolidated Risk Score</th>
+            <td class="score">
+                70.17
+            </td>
+        </tr>
+
+        <tr>
+            <th>Risk Level</th>
+            <td class="risk">
+                High
+            </td>
+        </tr>
+    </table>
+
+
+    <h2>4. Recommended Actions</h2>
+
+    <ul>
+        <li>Immediate hold of the transaction</li><li>Customer outreach for verification</li><li>Analyst investigation</li><li>Generate a draft STR</li><li>Escalate to Admin for final sign-off</li>
+    </ul>
+
+
+    <h2>5. Risk Explanation</h2>
+
+    <div class="explanation">
+        <strong>Summary:</strong><br>
+        AF1 - Device fingerprint change = 1. The current device fingerprint differs from the stored profile, which contributes to transaction risk. FF3 - Holding-time risk factor = 0.5833. Funds were held for a relatively short period, which contributes to risk. PH1 - Domain-age risk factor = 0.9222. The domain is relatively young and contributes to phishing risk. PH2 - Certificate risk factor = 1. The website certificate has a high-risk characteristic. PH3 - Blacklist risk factor = 1. The domain appears on the local blacklist.
+    </div>
+
+    <h3>Triggered Signals</h3>
+
+    <ul>
+        <li>AF1 - Device fingerprint change = 1. The current device fingerprint differs from the stored profile, which contributes to transaction risk.</li><li>FF3 - Holding-time risk factor = 0.5833. Funds were held for a relatively short period, which contributes to risk.</li><li>PH1 - Domain-age risk factor = 0.9222. The domain is relatively young and contributes to phishing risk.</li><li>PH2 - Certificate risk factor = 1. The website certificate has a high-risk characteristic.</li><li>PH3 - Blacklist risk factor = 1. The domain appears on the local blacklist.</li>
+    </ul>
+
+
+    <h2>6. Supporting Evidence</h2>
+
+    <table>
+        <tr>
+            <th>Evidence Type</th>
+            <th>Evidence</th>
+        </tr>
+
+        <tr>
+            <td>Adaptive Friction</td>
+            <td>{<br>  &quot;recordId&quot;: &quot;AF-04&quot;,<br>  &quot;transactionId&quot;: &quot;TXN-2026-04&quot;,<br>  &quot;liveTransaction&quot;: {<br>    &quot;amount&quot;: 28604.84,<br>    &quot;currency&quot;: &quot;EUR&quot;,<br>    &quot;deviceFingerprint&quot;: {<br>      &quot;os&quot;: &quot;Android 13&quot;,<br>      &quot;browser&quot;: &quot;Chrome 120.0&quot;,<br>      &quot;ipAddress&quot;: &quot;198.51.100.22&quot;,<br>      &quot;userAgent&quot;: &quot;Mozilla/5.0 (Linux; Android 13) Chrome/120.0&quot;<br>    },<br>    &quot;distanceKm&quot;: 203.51<br>  },<br>  &quot;storedProfile&quot;: {<br>    &quot;historicalAvgAmount&quot;: 26000.0,<br>    &quot;knownDeviceFingerprint&quot;: {<br>      &quot;os&quot;: &quot;Windows 11&quot;,<br>      &quot;browser&quot;: &quot;Edge 126.0&quot;,<br>      &quot;ipAddress&quot;: &quot;203.0.113.45&quot;,<br>      &quot;userAgent&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edge/126.0&quot;<br>    }<br>  }<br>}</td>
+        </tr>
+
+        <tr>
+            <td>Fund Flow</td>
+            <td>{<br>  &quot;TransactionId&quot;: &quot;TXN-2026-04&quot;,<br>  &quot;RecordId&quot;: &quot;FF-04&quot;,<br>  &quot;Currency&quot;: &quot;EUR&quot;,<br>  &quot;InDegree&quot;: 7.0,<br>  &quot;OutDegree&quot;: 7,<br>  &quot;RemainingBalance&quot;: 55167.84,<br>  &quot;TotalSent&quot;: 100000.0,<br>  &quot;HoldingMinutes&quot;: 25<br>}</td>
+        </tr>
+
+        <tr>
+            <td>Phishing</td>
+            <td>{<br>  &quot;recordId&quot;: &quot;PH-04&quot;,<br>  &quot;transactionId&quot;: &quot;TXN-2026-04&quot;,<br>  &quot;submittedAt&quot;: &quot;2026-07-15T10:21:00Z&quot;,<br>  &quot;domain&quot;: {<br>    &quot;registrationDate&quot;: &quot;2026-07-01T10:21:00Z&quot;<br>  },<br>  &quot;certificate&quot;: {<br>    &quot;issuer&quot;: &quot;self&quot;,<br>    &quot;selfSigned&quot;: true,<br>    &quot;validFrom&quot;: &quot;2026-07-14T10:21:00Z&quot;,<br>    &quot;validTo&quot;: &quot;2026-08-04T10:21:00Z&quot;<br>  },<br>  &quot;localListing&quot;: &quot;blacklist&quot;<br>}</td>
+        </tr>
+
+        <tr>
+            <td>OCR</td>
+            <td>Not provided</td>
+        </tr>
+    </table>
+
+
+    <h2>7. Analyst Review &amp; Sign-off</h2>
+
+    <table>
+        <tr>
+            <th>Analyst Name</th>
+            <td></td>
+        </tr>
+
+        <tr>
+            <th>Analyst ID</th>
+            <td></td>
+        </tr>
+
+        <tr>
+            <th>Review Date / Time</th>
+            <td></td>
+        </tr>
+
+        <tr>
+            <th>Electronic Signature</th>
+            <td class="signature">
+                
+            </td>
+        </tr>
+    </table>
+
+
+    <div class="footer">
+        Generated by Unified Fraud Detection Engine
+    </div>
+
+</body>
+</html>

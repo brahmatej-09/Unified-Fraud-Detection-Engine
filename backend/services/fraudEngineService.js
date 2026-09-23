@@ -29,6 +29,36 @@ const analyzeTransaction = async (
     }
 };
 
+
+const riskScore = async (data) => {
+    try {
+
+        const response = await axios.post(
+            "http://localhost:8000/risk-score",
+            data
+        );
+
+        return response.data;
+
+    } catch (error) {
+
+        console.error(
+            "Fraud engine risk-score error:",
+            error.response?.data || error.message
+        );
+
+        if (error.response?.data) {
+            return error.response.data;
+        }
+
+        throw new Error(
+            "Fraud engine is unavailable"
+        );
+    }
+};
+
+
 module.exports = {
-    analyzeTransaction
+    analyzeTransaction,
+    riskScore
 };
