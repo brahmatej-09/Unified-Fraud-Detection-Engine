@@ -1,7 +1,17 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, File, UploadFile, Form
 
 import shutil
 import os
+import logging
+
+from logging_config import setup_logging
+from reporting.str_generator import generate_str
+from reporting.str_html import generate_str_html
+from reporting.str_pdf import generate_str_pdf
+
+setup_logging()
+
+logger = logging.getLogger("fraud_engine")
 
 from ocr.fund_flow_parser import parse_fund_flow_text
 
@@ -149,13 +159,17 @@ async def process_fund_flow_ocr(
             text
         )
 
-        # ====================================================
-        # 3. Calculate Fund Flow score
-        # ====================================================
+        # Calculate Fund Flow score for each OCR transaction
+        fund_flow_results = []
 
-        fund_flow_result = calculate_fund_flow(
-            fund_flow
-        )
+        for record in fund_flow:
+
+            result = calculate_fund_flow(record)
+
+            fund_flow_results.append({
+                "transaction": record,
+                "analysis": result
+            })
 
         # ====================================================
         # 4. Return result
@@ -168,7 +182,7 @@ async def process_fund_flow_ocr(
             "fund_flow": fund_flow,
 
             "fund_flow_analysis":
-                fund_flow_result,
+                fund_flow_results,
 
             "ocr_text": text
         }
@@ -178,6 +192,7 @@ async def process_fund_flow_ocr(
         if os.path.exists(file_path):
             os.remove(file_path)
 
+
 # ============================================================
 # OCR → COMPLETE FRAUD ANALYSIS
 # ============================================================
@@ -185,8 +200,8 @@ async def process_fund_flow_ocr(
 @app.post("/ocr/analyze")
 async def analyze_ocr_transaction(
     file: UploadFile = File(...),
-    transaction_id: str = "",
-    table_name: str = "table1"
+    transaction_id: str = Form(""),
+    table_name: str = Form("table1")
 ):
 
     os.makedirs("temp", exist_ok=True)
@@ -261,6 +276,29 @@ async def analyze_ocr_transaction(
             text
         )
 
+        # Find the requested transaction in the OCR results
+        selected_fund_flow = next(
+            (
+                record
+                for record in ocr_fund_flow
+                if record.get("transactionId") == transaction_id
+            ),
+            None
+        )
+
+        # Stop if the requested transaction was not found
+        if selected_fund_flow is None:
+
+            return {
+                "valid": False,
+                "message":
+                    f"Transaction ID {transaction_id} not found in OCR data",
+                "transaction_id": transaction_id
+            }
+
+        # Use only the selected transaction for scoring
+        ocr_fund_flow = selected_fund_flow
+
         # ====================================================
         # 4. Load Adaptive + Phishing
         #    from selected dataset
@@ -312,6 +350,8 @@ async def analyze_ocr_transaction(
         # 8. Validation
         # ====================================================
 
+        # Store all validation errors found in:
+        # Adaptive Friction, Fund Flow OCR and Phishing.
         validation_errors = []
 
         for name, result in [
@@ -322,24 +362,31 @@ async def analyze_ocr_transaction(
 
             if not result["valid"]:
 
-                validation_errors.append({
+                error = {
                     "component": name,
-                    "reason": result["reason"],
-                    "missing_fields":
-                        result["missing_fields"]
-                })
+                    "reason": result["reason"]
+                }
 
+                # Handle missing required fields.
+                if "missing_fields" in result:
+                    error["missing_fields"] = result["missing_fields"]
+
+                # Handle invalid field types or values.
+                if "invalid_fields" in result:
+                    error["invalid_fields"] = result["invalid_fields"]
+
+                validation_errors.append(error)
+
+        # Reject the transaction if any component failed validation.
         if validation_errors:
 
             return {
                 "valid": False,
                 "table": table_name,
                 "transaction_id": transaction_id,
-                "validation_errors":
-                    validation_errors,
+                "validation_errors": validation_errors,
                 "ocr_text": text,
-                "parsed_fund_flow":
-                    ocr_fund_flow
+                "parsed_fund_flow": ocr_fund_flow
             }
 
         # ====================================================
@@ -347,7 +394,6 @@ async def analyze_ocr_transaction(
         # ====================================================
 
         final_result = calculate_final_score(
-
             adaptive_result[
                 "adaptive_friction_score"
             ],
@@ -366,13 +412,9 @@ async def analyze_ocr_transaction(
         # ====================================================
 
         explanation = generate_explanation(
-
             adaptive_result,
-
             fund_flow_result,
-
             phishing_result,
-
             final_result
         )
 
@@ -424,6 +466,8 @@ async def analyze_ocr_transaction(
 
         if os.path.exists(file_path):
             os.remove(file_path)
+
+
 # ============================================================
 # ANALYZE DATA SENT DIRECTLY TO PYTHON
 # ============================================================
@@ -459,34 +503,66 @@ def analyze_transaction(data: dict):
     # 4. Validation
     # ========================================================
 
+    # Store all validation errors found in the
+    # Adaptive Friction, Fund Flow and Phishing results.
     validation_errors = []
+
+    # --------------------------------------------------------
+    # Adaptive Friction validation
+    # --------------------------------------------------------
 
     if not adaptive_result["valid"]:
 
-        validation_errors.append({
+        error = {
             "component": "Adaptive Friction",
-            "reason": adaptive_result["reason"],
-            "missing_fields":
-                adaptive_result["missing_fields"]
-        })
+            "reason": adaptive_result["reason"]
+        }
+
+        if "missing_fields" in adaptive_result:
+            error["missing_fields"] = adaptive_result["missing_fields"]
+
+        if "invalid_fields" in adaptive_result:
+            error["invalid_fields"] = adaptive_result["invalid_fields"]
+
+        validation_errors.append(error)
+
+    # --------------------------------------------------------
+    # Fund Flow validation
+    # --------------------------------------------------------
 
     if not fund_flow_result["valid"]:
 
-        validation_errors.append({
+        error = {
             "component": "Fund Flow",
-            "reason": fund_flow_result["reason"],
-            "missing_fields":
-                fund_flow_result["missing_fields"]
-        })
+            "reason": fund_flow_result["reason"]
+        }
+
+        if "missing_fields" in fund_flow_result:
+            error["missing_fields"] = fund_flow_result["missing_fields"]
+
+        if "invalid_fields" in fund_flow_result:
+            error["invalid_fields"] = fund_flow_result["invalid_fields"]
+
+        validation_errors.append(error)
+
+    # --------------------------------------------------------
+    # Phishing validation
+    # --------------------------------------------------------
 
     if not phishing_result["valid"]:
 
-        validation_errors.append({
+        error = {
             "component": "Phishing",
-            "reason": phishing_result["reason"],
-            "missing_fields":
-                phishing_result["missing_fields"]
-        })
+            "reason": phishing_result["reason"]
+        }
+
+        if "missing_fields" in phishing_result:
+            error["missing_fields"] = phishing_result["missing_fields"]
+
+        if "invalid_fields" in phishing_result:
+            error["invalid_fields"] = phishing_result["invalid_fields"]
+
+        validation_errors.append(error)
 
     # ========================================================
     # 5. Reject invalid transaction
@@ -507,7 +583,6 @@ def analyze_transaction(data: dict):
     # ========================================================
 
     final_result = calculate_final_score(
-
         adaptive_result[
             "adaptive_friction_score"
         ],
@@ -526,13 +601,9 @@ def analyze_transaction(data: dict):
     # ========================================================
 
     explanation = generate_explanation(
-
         adaptive_result,
-
         fund_flow_result,
-
         phishing_result,
-
         final_result
     )
 
@@ -559,6 +630,93 @@ def analyze_transaction(data: dict):
         "explanation":
             explanation
     }
+
+
+# ============================================================
+# REQUIRED RISK SCORE API
+# ============================================================
+
+@app.post("/risk-score")
+def risk_score(data: dict):
+    """
+    Calculate the complete fraud risk score for a transaction.
+
+    For High and Critical risk levels, an STR, HTML report,
+    and PDF report are also generated.
+    """
+
+    logger.info("Risk score request received")
+
+    result = analyze_transaction(data)
+
+    if not result.get("valid", False):
+
+        logger.warning(
+            "Risk score request rejected | validation_errors=%s",
+            result.get("validation_errors")
+        )
+
+        return result
+
+    final_result = result.get(
+        "final_result",
+        {}
+    )
+
+    risk_level = final_result.get(
+        "risk_level"
+    )
+
+    # Generate STR only for High and Critical transactions
+    if risk_level in {"High", "Critical"}:
+
+        str_result = generate_str(
+            transaction_id=data.get("transaction_id"),
+            final_result=final_result,
+            adaptive_result=result.get(
+                "adaptive_friction",
+                {}
+            ),
+            fund_flow_result=result.get(
+                "fund_flow",
+                {}
+            ),
+            phishing_result=result.get(
+                "phishing",
+                {}
+            ),
+            explanation=result.get(
+                "explanation",
+                {}
+            ),
+            transaction_data=data
+        )
+
+        result["str"] = str_result
+
+        # Generate HTML report for the STR
+        html_result = generate_str_html(
+            str_result,
+            output_dir="reports"
+        )
+
+        result["str_html"] = html_result
+
+        # Generate PDF report for the STR
+        pdf_result = generate_str_pdf(
+            str_result,
+            output_dir="reports"
+        )
+
+        result["str_pdf"] = pdf_result
+
+        logger.info(
+            "STR generated | transaction_id=%s | risk_level=%s",
+            data.get("transaction_id"),
+            risk_level
+        )
+
+    return result
 
 
 # ============================================================
@@ -618,15 +776,11 @@ def analyze_real_transaction(
     ]:
 
         return {
-
             "valid": False,
-
             "table":
                 table_name,
-
             "transaction_id":
                 transaction_id,
-
             "message":
                 "Transaction not found"
         }
@@ -636,7 +790,6 @@ def analyze_real_transaction(
     # ========================================================
 
     adaptive_result = calculate_adaptive_friction(
-
         transaction[
             "adaptive_friction"
         ]
@@ -647,7 +800,6 @@ def analyze_real_transaction(
     # ========================================================
 
     fund_flow_result = calculate_fund_flow(
-
         transaction[
             "fund_flow"
         ]
@@ -660,7 +812,6 @@ def analyze_real_transaction(
     # ========================================================
 
     phishing_result = calculate_phishing(
-
         transaction[
             "phishing"
         ]
@@ -675,36 +826,25 @@ def analyze_real_transaction(
     validation_errors = []
 
     for name, result in [
-
-        (
-            "Adaptive Friction",
-            adaptive_result
-        ),
-
-        (
-            "Fund Flow",
-            fund_flow_result
-        ),
-
-        (
-            "Phishing",
-            phishing_result
-        )
-
+        ("Adaptive Friction", adaptive_result),
+        ("Fund Flow", fund_flow_result),
+        ("Phishing", phishing_result)
     ]:
 
         if not result["valid"]:
 
-            validation_errors.append({
-
+            error = {
                 "component": name,
+                "reason": result["reason"]
+            }
 
-                "reason":
-                    result["reason"],
+            if "missing_fields" in result:
+                error["missing_fields"] = result["missing_fields"]
 
-                "missing_fields":
-                    result["missing_fields"]
-            })
+            if "invalid_fields" in result:
+                error["invalid_fields"] = result["invalid_fields"]
+
+            validation_errors.append(error)
 
     # ========================================================
     # 5. Reject invalid transaction
@@ -712,18 +852,18 @@ def analyze_real_transaction(
 
     if validation_errors:
 
+        logger.warning(
+            "Transaction rejected | table=%s | transaction_id=%s | validation_errors=%s",
+            table_name,
+            transaction_id,
+            validation_errors
+        )
+
         return {
-
             "valid": False,
-
-            "table":
-                table_name,
-
-            "transaction_id":
-                transaction_id,
-
-            "validation_errors":
-                validation_errors
+            "table": table_name,
+            "transaction_id": transaction_id,
+            "validation_errors": validation_errors
         }
 
     # ========================================================
@@ -731,18 +871,9 @@ def analyze_real_transaction(
     # ========================================================
 
     final_result = calculate_final_score(
-
-        adaptive_result[
-            "adaptive_friction_score"
-        ],
-
-        fund_flow_result[
-            "fund_flow_score"
-        ],
-
-        phishing_result[
-            "phishing_score"
-        ]
+        adaptive_result["adaptive_friction_score"],
+        fund_flow_result["fund_flow_score"],
+        phishing_result["phishing_score"]
     )
 
     # ========================================================
@@ -750,29 +881,84 @@ def analyze_real_transaction(
     # ========================================================
 
     explanation = generate_explanation(
-
         adaptive_result,
-
         fund_flow_result,
-
         phishing_result,
-
         final_result
     )
+    
 
     # ========================================================
-    # 8. Final Response
+    # 8. Generate STR for High and Critical transactions
+    # ========================================================
+
+    str_result = None
+    str_html_result = None
+    str_pdf_result = None
+
+    if final_result["risk_level"] in {"High", "Critical"}:
+
+        # Use only information actually present in the company dataset.
+        # Fields not supplied by the dataset remain None.
+        transaction_data = {
+            "transaction_date_time": None,
+            "channel": None,
+            "amount": transaction["adaptive_friction"]["liveTransaction"].get("amount"),
+            "currency": transaction["adaptive_friction"]["liveTransaction"].get("currency"),
+            "geolocation": None,
+            "device_fingerprint": transaction["adaptive_friction"]["liveTransaction"].get(
+                "deviceFingerprint"
+            ),
+            "merchant": None,
+            "merchant_category": None,
+            "beneficiary": None
+        }
+
+        # Preserve the original company records as STR evidence.
+        evidence = {
+            "adaptive_friction": transaction["adaptive_friction"],
+            "fund_flow": transaction["fund_flow"],
+            "phishing": transaction["phishing"]
+        }
+
+        str_result = generate_str(
+            transaction_id=transaction_id,
+            final_result=final_result,
+            adaptive_result=adaptive_result,
+            fund_flow_result=fund_flow_result,
+            phishing_result=phishing_result,
+            explanation=explanation,
+            transaction_data=transaction_data,
+            evidence=evidence
+        )
+
+        # Generate HTML STR report
+        str_html_result = generate_str_html(
+            str_result,
+            output_dir="reports"
+        )
+
+        # Generate PDF STR report
+        str_pdf_result = generate_str_pdf(
+            str_result,
+            output_dir="reports"
+        )
+
+        logger.info(
+            "STR generated | table=%s | transaction_id=%s | risk_level=%s",
+            table_name,
+            transaction_id,
+            final_result["risk_level"]
+        )
+
+    # ========================================================
+    # 9. Final Response
     # ========================================================
 
     return {
-
         "valid": True,
-
-        "table":
-            table_name,
-
-        "transaction_id":
-            transaction_id,
+        "table": table_name,
+        "transaction_id": transaction_id,
 
         "adaptive_friction":
             adaptive_result,
@@ -787,5 +973,14 @@ def analyze_real_transaction(
             final_result,
 
         "explanation":
-            explanation
+            explanation,
+
+        "str":
+            str_result,
+
+        "str_html":
+            str_html_result,
+
+        "str_pdf":
+            str_pdf_result
     }
