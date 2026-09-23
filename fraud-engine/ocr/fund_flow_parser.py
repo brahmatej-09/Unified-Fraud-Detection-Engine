@@ -1,135 +1,127 @@
 import re
 
 
-def parse_fund_flow_text(text, transaction_id=None):
+def parse_fund_flow_text(text):
+    """
+    Convert OCR-extracted fund-flow statement text into
+    structured records expected by the fraud engine.
 
-    result = {
-        "InDegree": None,
-        "OutDegree": None,
-        "RemainingBalance": None,
-        "TotalSent": None,
-        "HoldingMinutes": None
-    }
+    The parser recognizes the labels used in the actual
+    OCR statement and returns all transaction records.
+    """
 
-    # ---------------------------------------------------------
+    records = []
+
+    # --------------------------------------------------------
     # Normalize OCR text
-    # ---------------------------------------------------------
+    # --------------------------------------------------------
 
     text = text.replace(",", "")
     text = text.replace("$", "")
-    text = text.replace("€", "")
-    text = text.replace("₹", "")
+    text = text.replace("Γé¼", "")
+    text = text.replace("Γé╣", "")
 
-    # ---------------------------------------------------------
-    # Find the correct transaction record
-    # ---------------------------------------------------------
+    # --------------------------------------------------------
+    # Split the statement into transaction records
+    # --------------------------------------------------------
 
-    if transaction_id:
+    record_blocks = re.split(
+        r"RECORD\s+\d+\s+OF\s+\d+",
+        text,
+        flags=re.IGNORECASE
+    )
 
-        transaction_pattern = re.compile(
-            rf"TRANSACTION\s+REF\s*"
-            rf"(?:\n|\r\n|\s)+"
-            rf"{re.escape(transaction_id)}"
-            rf"(.*?)(?=RECORD\s+\d+\s+OF\s+\d+|AMOUNTS\s+IN|$)",
-            re.IGNORECASE | re.DOTALL
+    # --------------------------------------------------------
+    # Parse each transaction record
+    # --------------------------------------------------------
+
+    for block in record_blocks:
+
+        transaction_match = re.search(
+            r"TRANSACTION\s+REF\s*\n?\s*([A-Z0-9\-]+)",
+            block,
+            re.IGNORECASE
         )
 
-        match = transaction_pattern.search(text)
+        if not transaction_match:
+            continue
 
-        if not match:
-            return result
+        transaction_id = transaction_match.group(1).strip()
 
-        record_text = match.group(1)
+        result = {
+            "transactionId": transaction_id,
+            "InDegree": None,
+            "OutDegree": None,
+            "RemainingBalance": None,
+            "TotalSent": None,
+            "HoldingMinutes": None
+        }
 
-    else:
+        # ----------------------------------------------------
+        # Incoming Counterparties → InDegree
+        # ----------------------------------------------------
 
-        record_text = text
-
-    # ---------------------------------------------------------
-    # INCOMING COUNTERPARTIES
-    # ---------------------------------------------------------
-
-    match = re.search(
-        r"INCOMING\s+COUNTERPARTIES\s*"
-        r"(?:\n|\r\n|\s)+"
-        r"(\d+|N/A)",
-        record_text,
-        re.IGNORECASE
-    )
-
-    if match:
-        value = match.group(1)
-
-        if value.upper() != "N/A":
-            result["InDegree"] = int(value)
-
-    # ---------------------------------------------------------
-    # OUTGOING COUNTERPARTIES
-    # ---------------------------------------------------------
-
-    match = re.search(
-        r"OUTGOING\s+COUNTERPARTIES\s*"
-        r"(?:\n|\r\n|\s)+"
-        r"(\d+|N/A)",
-        record_text,
-        re.IGNORECASE
-    )
-
-    if match:
-        value = match.group(1)
-
-        if value.upper() != "N/A":
-            result["OutDegree"] = int(value)
-
-    # ---------------------------------------------------------
-    # HOLDING MINUTES
-    # ---------------------------------------------------------
-
-    match = re.search(
-        r"HOLDING\s+MINUTES\s*"
-        r"(?:\n|\r\n|\s)+"
-        r"(\d+(?:\.\d+)?)",
-        record_text,
-        re.IGNORECASE
-    )
-
-    if match:
-        result["HoldingMinutes"] = float(
-            match.group(1)
+        match = re.search(
+            r"INCOMING\s+COUNTERPARTIES\s*\n?\s*(\d+)",
+            block,
+            re.IGNORECASE
         )
 
-    # ---------------------------------------------------------
-    # TOTAL SENT
-    # ---------------------------------------------------------
+        if match:
+            result["InDegree"] = int(match.group(1))
 
-    match = re.search(
-        r"TOTAL\s+SENT\s*"
-        r"(?:\n|\r\n|\s)+"
-        r"(\d+(?:\.\d+)?)",
-        record_text,
-        re.IGNORECASE
-    )
+        # ----------------------------------------------------
+        # Outgoing Counterparties → OutDegree
+        # ----------------------------------------------------
 
-    if match:
-        result["TotalSent"] = float(
-            match.group(1)
+        match = re.search(
+            r"OUTGOING\s+COUNTERPARTIES\s*\n?\s*(\d+)",
+            block,
+            re.IGNORECASE
         )
 
-    # ---------------------------------------------------------
-    # BALANCE RETAINED
-    # ---------------------------------------------------------
+        if match:
+            result["OutDegree"] = int(match.group(1))
 
-    match = re.search(
-        r"BALANCE\s+RETAINED\s*"
-        r"(?:\n|\r\n|\s)+"
-        r"(-?\d+(?:\.\d+)?)",
-        record_text,
-        re.IGNORECASE
-    )
+        # ----------------------------------------------------
+        # Holding Minutes
+        # ----------------------------------------------------
 
-    if match:
-        result["RemainingBalance"] = float(
-            match.group(1)
+        match = re.search(
+            r"HOLDING\s+MINUTES\s*\n?\s*(\d+(?:\.\d+)?)",
+            block,
+            re.IGNORECASE
         )
 
-    return result
+        if match:
+            result["HoldingMinutes"] = float(match.group(1))
+
+        # ----------------------------------------------------
+        # Total Sent
+        # ----------------------------------------------------
+
+        match = re.search(
+            r"TOTAL\s+SENT\s*\n?\s*(-?\d+(?:\.\d+)?)",
+            block,
+            re.IGNORECASE
+        )
+
+        if match:
+            result["TotalSent"] = float(match.group(1))
+
+        # ----------------------------------------------------
+        # Balance Retained → RemainingBalance
+        # ----------------------------------------------------
+
+        match = re.search(
+            r"BALANCE\s+RETAINED\s*\n?\s*(-?\d+(?:\.\d+)?)",
+            block,
+            re.IGNORECASE
+        )
+
+        if match:
+            result["RemainingBalance"] = float(match.group(1))
+
+        records.append(result)
+
+    return records

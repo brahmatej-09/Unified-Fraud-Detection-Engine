@@ -1,0 +1,44 @@
+risk_bands:
+
+  - name: Very Low
+    min_score: 0
+    max_score: 20
+    recommended_action:
+      - No immediate action
+      - Log the event for audit purposes only
+      - Continue routine monitoring
+
+  - name: Low
+    min_score: 21
+    max_score: 40
+    recommended_action:
+      - Automated monitoring
+      - Route the transaction to the Viewer role
+      - Add the transaction to the daily review queue
+
+  - name: Medium
+    min_score: 41
+    max_score: 60
+    recommended_action:
+      - Analyst-level review
+      - Display the full risk breakdown
+      - Analyst decides whether additional verification is required
+
+  - name: High
+    min_score: 61
+    max_score: 80
+    recommended_action:
+      - Immediate hold of the transaction
+      - Customer outreach for verification
+      - Analyst investigation
+      - Generate a draft STR
+      - Escalate to Admin for final sign-off
+
+  - name: Critical
+    min_score: 81
+    max_score: 100
+    recommended_action:
+      - Automatic transaction freeze
+      - Immediate escalation to fraud-prevention leadership and compliance
+      - Urgent customer verification
+      - Generate the full STR
