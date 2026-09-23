@@ -199,9 +199,7 @@ async def process_fund_flow_ocr(
 
 @app.post("/ocr/analyze")
 async def analyze_ocr_transaction(
-    file: UploadFile = File(...),
-    transaction_id: str = Form(""),
-    table_name: str = Form("table1")
+    file: UploadFile = File(...)
 ):
 
     os.makedirs("temp", exist_ok=True)
@@ -214,34 +212,7 @@ async def analyze_ocr_transaction(
     try:
 
         # ====================================================
-        # 1. Validate table
-        # ====================================================
-
-        allowed_tables = {
-            "table1",
-            "table2",
-            "table3",
-            "table4",
-            "table5",
-            "table6"
-        }
-
-        if table_name not in allowed_tables:
-
-            return {
-                "valid": False,
-                "message": "Invalid table name"
-            }
-
-        if not transaction_id:
-
-            return {
-                "valid": False,
-                "message": "Transaction ID is required"
-            }
-
-        # ====================================================
-        # 2. OCR statement
+        # 1. OCR statement
         # ====================================================
 
         filename = file.filename.lower()
@@ -269,197 +240,192 @@ async def analyze_ocr_transaction(
             }
 
         # ====================================================
-        # 3. Parse Fund Flow from OCR
+        # 2. Parse Fund Flow from OCR
         # ====================================================
 
-        ocr_fund_flow = parse_fund_flow_text(
+        ocr_fund_flow_list = parse_fund_flow_text(
             text
         )
 
-        # Find the requested transaction in the OCR results
-        selected_fund_flow = next(
-            (
-                record
-                for record in ocr_fund_flow
-                if record.get("transactionId") == transaction_id
-            ),
-            None
-        )
-
-        # Stop if the requested transaction was not found
-        if selected_fund_flow is None:
-
+        # Find the first transaction in the OCR results
+        if not ocr_fund_flow_list:
             return {
                 "valid": False,
-                "message":
-                    f"Transaction ID {transaction_id} not found in OCR data",
-                "transaction_id": transaction_id
+                "message": "No transaction data found in the document.",
+                "ocr_text": text
             }
+            
+        records = []
+        
+        for ocr_fund_flow in ocr_fund_flow_list:
+            transaction_id = ocr_fund_flow.get("transactionId")
+            
+            if not transaction_id:
+                records.append({
+                    "valid": False,
+                    "message": "Could not extract a Transaction ID from this record.",
+                    "parsed_fund_flow": ocr_fund_flow
+                })
+                continue
 
-        # Use only the selected transaction for scoring
-        ocr_fund_flow = selected_fund_flow
+            # ====================================================
+            # 3. Load Adaptive + Phishing from database
+            # ====================================================
 
-        # ====================================================
-        # 4. Load Adaptive + Phishing
-        #    from selected dataset
-        # ====================================================
+            transaction = None
+            found_table = None
 
-        table_path = f"data/{table_name}"
+            allowed_tables = ["table1", "table2", "table3", "table4", "table5", "table6"]
 
-        transaction = get_transaction(
-            table_path,
-            transaction_id
-        )
+            best_incomplete_transaction = None
+            best_incomplete_table = None
 
-        if not transaction["adaptive_friction"]:
+            for t_name in allowed_tables:
+                table_path = f"data/{t_name}"
+                txn = get_transaction(table_path, transaction_id)
+                
+                if txn and txn.get("adaptive_friction") and txn.get("phishing"):
+                    af_res = calculate_adaptive_friction(txn.get("adaptive_friction"))
+                    ph_res = calculate_phishing(txn.get("phishing"))
+                    
+                    if af_res.get("valid") and ph_res.get("valid"):
+                        transaction = txn
+                        found_table = t_name
+                        break
+                    elif best_incomplete_transaction is None:
+                        best_incomplete_transaction = txn
+                        best_incomplete_table = t_name
+                elif txn and (txn.get("adaptive_friction") or txn.get("phishing")):
+                    if best_incomplete_transaction is None:
+                        best_incomplete_transaction = txn
+                        best_incomplete_table = t_name
 
-            return {
-                "valid": False,
-                "message": "Transaction not found",
-                "table": table_name,
-                "transaction_id": transaction_id
-            }
+            if transaction is None and best_incomplete_transaction is not None:
+                transaction = best_incomplete_transaction
+                found_table = best_incomplete_table
 
-        # ====================================================
-        # 5. Adaptive Friction
-        # ====================================================
-
-        adaptive_result = calculate_adaptive_friction(
-            transaction["adaptive_friction"]
-        )
-
-        # ====================================================
-        # 6. Fund Flow from OCR
-        # ====================================================
-
-        fund_flow_result = calculate_fund_flow(
-            ocr_fund_flow
-        )
-
-        # ====================================================
-        # 7. Phishing
-        # ====================================================
-
-        phishing_result = calculate_phishing(
-            transaction["phishing"]
-            if transaction["phishing"]
-            else {}
-        )
-
-        # ====================================================
-        # 8. Validation
-        # ====================================================
-
-        # Store all validation errors found in:
-        # Adaptive Friction, Fund Flow OCR and Phishing.
-        validation_errors = []
-
-        for name, result in [
-            ("Adaptive Friction", adaptive_result),
-            ("Fund Flow OCR", fund_flow_result),
-            ("Phishing", phishing_result)
-        ]:
-
-            if not result["valid"]:
-
-                error = {
-                    "component": name,
-                    "reason": result["reason"]
+            if transaction is None:
+                transaction = {
+                    "adaptive_friction": {},
+                    "phishing": {}
                 }
 
-                # Handle missing required fields.
-                if "missing_fields" in result:
-                    error["missing_fields"] = result["missing_fields"]
+            # ====================================================
+            # 4. Adaptive Friction
+            # ====================================================
 
-                # Handle invalid field types or values.
-                if "invalid_fields" in result:
-                    error["invalid_fields"] = result["invalid_fields"]
+            adaptive_result = calculate_adaptive_friction(
+                transaction["adaptive_friction"]
+            )
 
-                validation_errors.append(error)
+            # ====================================================
+            # 6. Fund Flow from OCR
+            # ====================================================
 
-        # Reject the transaction if any component failed validation.
-        if validation_errors:
+            fund_flow_result = calculate_fund_flow(
+                ocr_fund_flow
+            )
 
-            return {
-                "valid": False,
-                "table": table_name,
+            # ====================================================
+            # 7. Phishing
+            # ====================================================
+
+            phishing_result = calculate_phishing(
+                transaction["phishing"]
+                if transaction["phishing"]
+                else {}
+            )
+
+            # ====================================================
+            # 8. Validation
+            # ====================================================
+
+            validation_errors = []
+
+            for name, result in [
+                ("Adaptive Friction", adaptive_result),
+                ("Fund Flow OCR", fund_flow_result),
+                ("Phishing", phishing_result)
+            ]:
+                if not result["valid"]:
+                    error = {
+                        "component": name,
+                        "reason": result["reason"]
+                    }
+                    if "missing_fields" in result:
+                        error["missing_fields"] = result["missing_fields"]
+                    if "invalid_fields" in result:
+                        error["invalid_fields"] = result["invalid_fields"]
+                    validation_errors.append(error)
+
+            if validation_errors:
+                records.append({
+                    "valid": False,
+                    "table": found_table,
+                    "transaction_id": transaction_id,
+                    "validation_errors": validation_errors,
+                    "parsed_fund_flow": ocr_fund_flow
+                })
+                continue
+
+            # ====================================================
+            # 5. Final Fraud Score
+            # ====================================================
+
+            final_result = calculate_final_score(
+                adaptive_result["adaptive_friction_score"],
+                fund_flow_result["fund_flow_score"],
+                phishing_result["phishing_score"]
+            )
+
+            # ====================================================
+            # 10. Explanation
+            # ====================================================
+
+            explanation = generate_explanation(
+                adaptive_result,
+                fund_flow_result,
+                phishing_result,
+                final_result
+            )
+            
+            # ====================================================
+            # Generate STR for High/Critical Risk
+            # ====================================================
+            
+            str_data = None
+            if final_result.get("risk_level") in {"High", "Critical"}:
+                str_result = generate_str(
+                    transaction_id=transaction_id,
+                    final_result=final_result,
+                    adaptive_result=adaptive_result,
+                    fund_flow_result=fund_flow_result,
+                    phishing_result=phishing_result,
+                    explanation=explanation,
+                    transaction_data={"transaction_id": transaction_id}
+                )
+                
+                # We won't generate html/pdf here to save time, but we keep the JSON output
+                str_data = str_result
+
+            records.append({
+                "valid": True,
+                "table": found_table,
                 "transaction_id": transaction_id,
-                "validation_errors": validation_errors,
-                "ocr_text": text,
+                "source": "OCR + Dataset",
+                "adaptive_friction": adaptive_result,
+                "fund_flow": fund_flow_result,
+                "phishing": phishing_result,
+                "final_result": final_result,
+                "explanation": explanation,
+                "str": str_data,
                 "parsed_fund_flow": ocr_fund_flow
-            }
-
-        # ====================================================
-        # 9. Final Fraud Score
-        # ====================================================
-
-        final_result = calculate_final_score(
-            adaptive_result[
-                "adaptive_friction_score"
-            ],
-
-            fund_flow_result[
-                "fund_flow_score"
-            ],
-
-            phishing_result[
-                "phishing_score"
-            ]
-        )
-
-        # ====================================================
-        # 10. Explanation
-        # ====================================================
-
-        explanation = generate_explanation(
-            adaptive_result,
-            fund_flow_result,
-            phishing_result,
-            final_result
-        )
-
-        # ====================================================
-        # 11. Return complete analysis
-        # ====================================================
+            })
 
         return {
-
             "valid": True,
-
-            "table":
-                table_name,
-
-            "transaction_id":
-                transaction_id,
-
-            "source":
-                "OCR + Dataset",
-
-            "adaptive_friction":
-                adaptive_result,
-
-            "fund_flow":
-                fund_flow_result,
-
-            "phishing":
-                phishing_result,
-
-            "final_result":
-                final_result,
-
-            "explanation":
-                explanation,
-
-            "ocr": {
-                "filename":
-                    file.filename,
-
-                "parsed_fund_flow":
-                    ocr_fund_flow,
-
-                "text":
-                    text
-            }
+            "records": records,
+            "extracted_text": text
         }
 
     finally:

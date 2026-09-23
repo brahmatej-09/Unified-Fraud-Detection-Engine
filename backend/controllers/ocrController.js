@@ -21,24 +21,7 @@ const analyzeOCR = async (req, res) => {
         // 2. Get request parameters
         // -----------------------------------------
 
-        const {
-            transactionId,
-            tableName
-        } = req.body;
-
-        if (!transactionId) {
-
-            return res.status(400).json({
-                message: "Transaction ID is required"
-            });
-        }
-
-        if (!tableName) {
-
-            return res.status(400).json({
-                message: "Table name is required"
-            });
-        }
+        // No manual parameters required for document-driven extraction
 
         // -----------------------------------------
         // 3. Call Python OCR service
@@ -46,8 +29,6 @@ const analyzeOCR = async (req, res) => {
 
         const result = await ocrService.analyzeOCR(
             req.file.path,
-            transactionId,
-            tableName,
             req.file.originalname
         );
 

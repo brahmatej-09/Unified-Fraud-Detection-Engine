@@ -50,12 +50,40 @@ def parse_fund_flow_text(text):
 
         result = {
             "transactionId": transaction_id,
+            "ledger_record": None,
+            "currency": None,
             "InDegree": None,
             "OutDegree": None,
             "RemainingBalance": None,
             "TotalSent": None,
             "HoldingMinutes": None
         }
+
+        # ----------------------------------------------------
+        # Ledger Record
+        # ----------------------------------------------------
+
+        match = re.search(
+            r"LEDGER\s+RECORD\s*\n?\s*([A-Z0-9\-]+)",
+            block,
+            re.IGNORECASE
+        )
+
+        if match:
+            result["ledger_record"] = match.group(1).strip()
+
+        # ----------------------------------------------------
+        # Settlement Currency
+        # ----------------------------------------------------
+
+        match = re.search(
+            r"SETTLEMENT\s+CURRENCY\s*\n?\s*([A-Z]+)",
+            block,
+            re.IGNORECASE
+        )
+
+        if match:
+            result["currency"] = match.group(1).strip()
 
         # ----------------------------------------------------
         # Incoming Counterparties → InDegree

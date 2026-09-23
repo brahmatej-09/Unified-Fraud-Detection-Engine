@@ -118,14 +118,10 @@ export const fraudApi = {
     return await handleResponse(response);
   },
 
-  async analyzeOCR(file, transactionId) {
+  async analyzeOCR(file) {
     const formData = new FormData();
 
     formData.append("file", file);
-    formData.append(
-      "transactionId",
-      transactionId
-    );
 
     const token = localStorage.getItem("token");
 

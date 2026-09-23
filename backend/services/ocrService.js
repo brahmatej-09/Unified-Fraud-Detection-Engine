@@ -5,8 +5,6 @@ const path = require("path");
 
 const analyzeOCR = async (
     filePath,
-    transactionId,
-    tableName,
     originalFileName
 ) => {
 
@@ -27,15 +25,7 @@ const analyzeOCR = async (
             }
         );
 
-        form.append(
-            "transaction_id",
-            transactionId
-        );
-
-        form.append(
-            "table_name",
-            tableName
-        );
+        // No manual fields sent to Python
 
         const response = await axios.post(
             "http://localhost:8000/ocr/analyze",
